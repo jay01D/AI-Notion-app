@@ -14,7 +14,7 @@ const NewDocumentButton = () => {
             // Create a new document
             const { docId } = await createNewDocument()
             // Navigate to document
-            router.push(`/dashboard/${docId}`)
+            router.push(`/doc/${docId}`)
         })
     }
     return (
