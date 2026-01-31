@@ -30,3 +30,52 @@ export async function createNewDocument() {
 
   return { docId: docRef.id };
 }
+
+export async function inviteUser(roomId: string, email: string) {
+  const { sessionClaims } = await auth();
+  if (!sessionClaims) throw new Error("Unauthorized");
+
+  await adminDB
+    .collection("users")
+    .doc(email)
+    .collection("rooms")
+    .doc(roomId)
+    .set({
+      userId: email,
+      role: "editor",
+      createdAt: new Date(),
+      roomId,
+    });
+}
+
+export async function removeUser(roomId: string, email: string) {
+  const { sessionClaims } = await auth();
+  if (!sessionClaims) throw new Error("Unauthorized");
+
+  await adminDB
+    .collection("users")
+    .doc(email)
+    .collection("rooms")
+    .doc(roomId)
+    .delete();
+}
+
+export async function deleteDocument(roomId: string) {
+  const { sessionClaims } = await auth();
+  if (!sessionClaims) throw new Error("Unauthorized");
+
+  // delete the document
+  await adminDB.collection("documents").doc(roomId).delete();
+
+  // find all users with access and remove their room references
+  const roomDocs = await adminDB
+    .collectionGroup("rooms")
+    .where("roomId", "==", roomId)
+    .get();
+
+  const batch = adminDB.batch();
+  roomDocs.docs.forEach((doc) => {
+    batch.delete(doc.ref);
+  });
+  await batch.commit();
+}

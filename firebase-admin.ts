@@ -7,12 +7,19 @@ import {
 } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
 
-import serviceKey from "@/service_key.json";
+let serviceAccount: ServiceAccount;
+
+if (process.env.FIREBASE_SERVICE_KEY) {
+  serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_KEY);
+} else {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  serviceAccount = require("@/service_key.json");
+}
 
 const app =
   getApps().length === 0
     ? initializeApp({
-        credential: cert(serviceKey as ServiceAccount),
+        credential: cert(serviceAccount),
       })
     : getApp();
 
